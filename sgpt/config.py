@@ -9,6 +9,7 @@ from click import UsageError
 CONFIG_FOLDER = os.path.expanduser("~/.config")
 SHELL_GPT_CONFIG_FOLDER = Path(CONFIG_FOLDER) / "shell_gpt"
 SHELL_GPT_CONFIG_PATH = SHELL_GPT_CONFIG_FOLDER / ".sgptrc"
+SHELL_GPT_SYSTEM_CONFIG_PATH = Path("/etc/shell_gpt/.sgptrc")
 ROLE_STORAGE_PATH = SHELL_GPT_CONFIG_FOLDER / "roles"
 FUNCTIONS_PATH = SHELL_GPT_CONFIG_FOLDER / "functions"
 CHAT_CACHE_PATH = Path(gettempdir()) / "chat_cache"
@@ -42,13 +43,22 @@ DEFAULT_CONFIG = {
 
 
 class Config(dict):  # type: ignore
-    def __init__(self, config_path: Path, **defaults: Any):
+    def __init__(
+        self,
+        config_path: Path,
+        system_config_path: Path | None = None,
+        **defaults: Any,
+    ) -> None:
         self.config_path = config_path
+
+        merged_defaults = dict(defaults)
+        if system_config_path and system_config_path.exists():
+            merged_defaults.update(self._read_file(system_config_path))
 
         if self._exists:
             self._read()
             has_new_config = False
-            for key, value in defaults.items():
+            for key, value in merged_defaults.items():
                 if key not in self:
                     has_new_config = True
                     self[key] = value
@@ -57,10 +67,10 @@ class Config(dict):  # type: ignore
         else:
             config_path.parent.mkdir(parents=True, exist_ok=True)
             # Don't write API key to config file if it is in the environment.
-            if not defaults.get("OPENAI_API_KEY") and not os.getenv("OPENAI_API_KEY"):
+            if not merged_defaults.get("OPENAI_API_KEY") and not os.getenv("OPENAI_API_KEY"):
                 __api_key = getpass(prompt="Please enter your OpenAI API key: ")
-                defaults["OPENAI_API_KEY"] = __api_key
-            super().__init__(**defaults)
+                merged_defaults["OPENAI_API_KEY"] = __api_key
+            super().__init__(**merged_defaults)
             self._write()
 
     @property
@@ -74,12 +84,18 @@ class Config(dict):  # type: ignore
                 string_config += f"{key}={value}\n"
             file.write(string_config)
 
-    def _read(self) -> None:
-        with open(self.config_path, "r", encoding="utf-8") as file:
+    @staticmethod
+    def _read_file(path: Path) -> dict[str, str]:
+        result: dict[str, str] = {}
+        with open(path, "r", encoding="utf-8") as file:
             for line in file:
                 if line.strip() and not line.startswith("#"):
                     key, value = line.strip().split("=", 1)
-                    self[key] = value
+                    result[key] = value
+        return result
+
+    def _read(self) -> None:
+        self.update(self._read_file(self.config_path))
 
     def get(self, key: str) -> str:  # type: ignore
         # Prioritize environment variables over config file.
@@ -89,4 +105,8 @@ class Config(dict):  # type: ignore
         return value
 
 
-cfg = Config(SHELL_GPT_CONFIG_PATH, **DEFAULT_CONFIG)
+cfg = Config(
+    SHELL_GPT_CONFIG_PATH,
+    system_config_path=SHELL_GPT_SYSTEM_CONFIG_PATH,
+    **DEFAULT_CONFIG,
+)
