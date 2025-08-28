@@ -384,6 +384,10 @@ You can set up parameters in a runtime configuration file. System-wide defaults 
 OPENAI_API_KEY=your_api_key
 # Base URL of the backend server. If "default" URL will be resolved based on --model.
 API_BASE_URL=default
+# Prettify markdown output.
+PRETTIFY_MARKDOWN=true
+# Path to a directory with role definitions.
+ROLE_STORAGE_PATH=/Users/user/.config/shell_gpt/roles
 # Max amount of cached message per chat session.
 CHAT_CACHE_LENGTH=100
 # Chat cache folder.
@@ -400,10 +404,16 @@ DEFAULT_MODEL=gpt-4o
 DEFAULT_COLOR=magenta
 # When in --shell mode, default to "Y" for no input.
 DEFAULT_EXECUTE_SHELL_CMD=false
-# Disable streaming of responses
+# Disable streaming of responses.
 DISABLE_STREAMING=false
+# Interactive mode for --shell option.
+SHELL_INTERACTION=true
 # The pygment theme to view markdown (default/describe role).
 CODE_THEME=default
+# Override detected operating system in prompts.
+OS_NAME=auto
+# Override detected shell in prompts.
+SHELL_NAME=auto
 # Path to a directory with functions.
 OPENAI_FUNCTIONS_PATH=/Users/user/.config/shell_gpt/functions
 # Print output of functions when LLM uses them.
