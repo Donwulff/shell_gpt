@@ -33,12 +33,17 @@ def get_edited_prompt() -> str:
     return output
 
 
-def run_command(command: str) -> None:
+def run_command(command: str, allow: bool = False) -> None:
     """
     Runs a command in the user's shell.
     It is aware of the current user's $SHELL.
     :param command: A shell command to run.
+    :param allow: Must be True to permit execution.
     """
+    if not allow:
+        raise UsageError(
+            "Shell command execution is disabled. Use --interaction or set SHELL_INTERACTION=true to enable it."
+        )
     if platform.system() == "Windows":
         is_powershell = len(os.getenv("PSModulePath", "").split(os.pathsep)) >= 3
         full_command = (

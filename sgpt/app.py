@@ -253,7 +253,7 @@ def main(
             break
         if option in ("e", "y"):
             # "y" option is for keeping compatibility with old version.
-            run_command(full_completion)
+            run_command(full_completion, allow=True)
         elif option == "m":
             full_completion = session.prompt("", default=full_completion)
             continue
