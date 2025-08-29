@@ -64,8 +64,13 @@ def test_role_lookup_multiple_paths(tmp_path):
     role_file = system_path / "global.json"
     role_file.write_text(json.dumps({"name": "global", "role": "test"}))
 
+    original_paths = SystemRole.role_paths
+    original_storage = SystemRole.storage
     SystemRole.role_paths = [user_path, system_path]
     SystemRole.storage = user_path
 
     role = SystemRole.get("global")
     assert role.role == "test"
+
+    SystemRole.role_paths = original_paths
+    SystemRole.storage = original_storage

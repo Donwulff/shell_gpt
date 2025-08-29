@@ -7,6 +7,13 @@ from ..config import cfg
 from ..function import get_function
 from ..printer import MarkdownPrinter, Printer, TextPrinter
 from ..role import DefaultRoles, SystemRole
+from ..utils import select_model
+
+try:
+    from openai import NotFoundError
+except Exception:  # pragma: no cover
+    class NotFoundError(Exception):
+        pass
 
 completion: Callable[..., Any] = lambda *args, **kwargs: Generator[Any, None, None]
 
@@ -154,13 +161,17 @@ class Handler:
     ) -> str:
         disable_stream = cfg.get("DISABLE_STREAMING") == "true"
         messages = self.make_messages(prompt.strip())
-        generator = self.get_completion(
-            model=model,
-            temperature=temperature,
-            top_p=top_p,
-            messages=messages,
-            functions=functions,
-            caching=caching,
-            **kwargs,
-        )
-        return self.printer(generator, not disable_stream)
+        while True:
+            try:
+                generator = self.get_completion(
+                    model=model,
+                    temperature=temperature,
+                    top_p=top_p,
+                    messages=messages,
+                    functions=functions,
+                    caching=caching,
+                    **kwargs,
+                )
+                return self.printer(generator, not disable_stream)
+            except NotFoundError:
+                model = select_model()

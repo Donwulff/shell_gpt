@@ -6,6 +6,9 @@ from typing import Any, Callable
 
 import typer
 from click import BadParameter, UsageError
+from openai import OpenAI
+
+from sgpt.config import cfg
 
 from sgpt.__version__ import __version__
 from sgpt.integration import bash_integration, zsh_integration
@@ -98,3 +101,23 @@ def get_sgpt_version(*_args: Any) -> None:
     Displays the current installed version of ShellGPT
     """
     typer.echo(f"ShellGPT {__version__}")
+
+
+def select_model() -> str:
+    """Prompt user to select available model and update config."""
+    api_base_url = cfg.get("API_BASE_URL")
+    client = OpenAI(
+        api_key=cfg.get("OPENAI_API_KEY"),
+        base_url=None if api_base_url == "default" else api_base_url,
+        timeout=int(cfg.get("REQUEST_TIMEOUT")),
+    )
+    models = client.models.list().data
+    typer.echo("Available models:")
+    for m in models:
+        typer.echo(f"- {m.id}")
+    selected = typer.prompt("Please select a model")
+    if selected not in [m.id for m in models]:
+        raise UsageError("Invalid model selected")
+    cfg["DEFAULT_MODEL"] = selected
+    cfg._write()
+    return selected

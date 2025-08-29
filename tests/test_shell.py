@@ -128,7 +128,7 @@ def test_shell_chat(completion):
     args["--code"] = True
     result = runner.invoke(app, cmd_args(**args))
     assert result.exit_code == 2
-    assert "Error" in result.stdout
+    assert "Error" in result.stderr
     chat_path.unlink()
     # TODO: Shell chat can be recalled without --shell option.
 
@@ -173,7 +173,7 @@ def test_shell_and_describe_shell(completion):
 
     completion.assert_not_called()
     assert result.exit_code == 2
-    assert "Error" in result.stdout
+    assert "Error" in result.stderr
 
 
 @patch("sgpt.handlers.handler.completion")

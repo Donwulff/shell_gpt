@@ -21,6 +21,7 @@ from sgpt.utils import (
     get_sgpt_version,
     install_shell_integration,
     run_command,
+    select_model,
 )
 
 
@@ -168,10 +169,13 @@ def main(
         # In this case, "hello" will be used as a init prompt, and
         # "This is input" will be used as "interactive" input to the REPL.
         # This is useful to test REPL with some initial context.
-        for line in sys.stdin:
-            if "__sgpt__eof__" in line:
-                break
-            stdin += line
+        try:
+            for line in sys.stdin:
+                if "__sgpt__eof__" in line:
+                    break
+                stdin += line
+        except EOFError:
+            pass
         prompt = f"{stdin}\n\n{prompt}" if prompt else stdin
         try:
             # Switch to stdin for interactive input.
@@ -199,6 +203,8 @@ def main(
 
     if editor:
         prompt = get_edited_prompt()
+    if model == "ask":
+        model = select_model()
 
     role_class = (
         DefaultRoles.check_get(shell, describe_shell, code)
