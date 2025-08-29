@@ -3,6 +3,7 @@ import sys
 from abc import ABCMeta
 from pathlib import Path
 from typing import Any, Callable, Dict, List
+from os import pathsep
 
 from .config import cfg
 
@@ -46,9 +47,19 @@ class Function:
         return module
 
 
-functions_folder = Path(cfg.get("OPENAI_FUNCTIONS_PATH"))
-functions_folder.mkdir(parents=True, exist_ok=True)
-functions = [Function(str(path)) for path in functions_folder.glob("*.py")]
+_folders = [Path(p) for p in cfg.get("OPENAI_FUNCTIONS_PATH").split(pathsep)]
+_folders[0].mkdir(parents=True, exist_ok=True)
+functions: List[Function] = []
+seen: set[str] = set()
+for folder in _folders:
+    if not folder.exists():
+        continue
+    for path in folder.glob("*.py"):
+        func = Function(str(path))
+        if func.name in seen:
+            continue
+        seen.add(func.name)
+        functions.append(func)
 
 
 def get_function(name: str) -> Callable[..., Any]:

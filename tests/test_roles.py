@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from unittest.mock import patch
 
@@ -11,7 +12,7 @@ from .utils import app, cmd_args, comp_args, mock_comp, runner
 @patch("sgpt.handlers.handler.completion")
 def test_role(completion):
     completion.return_value = mock_comp('{"foo": "bar"}')
-    path = Path(cfg.get("ROLE_STORAGE_PATH")) / "json_gen_test.json"
+    path = Path(cfg.get("ROLE_STORAGE_PATH").split(os.pathsep)[0]) / "json_gen_test.json"
     path.unlink(missing_ok=True)
     args = {"--create-role": "json_gen_test"}
     stdin = "you are a JSON generator"
@@ -53,3 +54,18 @@ def test_role(completion):
     generated_json = json.loads(result.stdout)
     assert "foo" in generated_json
     path.unlink(missing_ok=True)
+
+
+def test_role_lookup_multiple_paths(tmp_path):
+    user_path = tmp_path / "user"
+    system_path = tmp_path / "system"
+    user_path.mkdir()
+    system_path.mkdir()
+    role_file = system_path / "global.json"
+    role_file.write_text(json.dumps({"name": "global", "role": "test"}))
+
+    SystemRole.role_paths = [user_path, system_path]
+    SystemRole.storage = user_path
+
+    role = SystemRole.get("global")
+    assert role.role == "test"

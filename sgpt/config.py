@@ -8,10 +8,23 @@ from click import UsageError
 
 CONFIG_FOLDER = os.path.expanduser("~/.config")
 SHELL_GPT_CONFIG_FOLDER = Path(CONFIG_FOLDER) / "shell_gpt"
-SHELL_GPT_CONFIG_PATH = SHELL_GPT_CONFIG_FOLDER / ".sgptrc"
-SHELL_GPT_SYSTEM_CONFIG_PATH = Path("/etc/shell_gpt/.sgptrc")
+
+
+def _config_path(folder: Path) -> Path:
+    for name in ("sgptrc", ".sgptrc"):
+        path = folder / name
+        if path.exists():
+            return path
+    return folder / "sgptrc"
+
+
+SHELL_GPT_CONFIG_PATH = _config_path(SHELL_GPT_CONFIG_FOLDER)
+SHELL_GPT_SYSTEM_CONFIG_PATH = _config_path(Path("/etc/shell_gpt"))
+
 ROLE_STORAGE_PATH = SHELL_GPT_CONFIG_FOLDER / "roles"
+SYSTEM_ROLE_STORAGE_PATH = Path("/etc/shell_gpt/roles")
 FUNCTIONS_PATH = SHELL_GPT_CONFIG_FOLDER / "functions"
+SYSTEM_FUNCTIONS_PATH = Path("/etc/shell_gpt/functions")
 CHAT_CACHE_PATH = Path(gettempdir()) / "chat_cache"
 CACHE_PATH = Path(gettempdir()) / "cache"
 
@@ -25,11 +38,17 @@ DEFAULT_CONFIG = {
     "REQUEST_TIMEOUT": int(os.getenv("REQUEST_TIMEOUT", "60")),
     "DEFAULT_MODEL": os.getenv("DEFAULT_MODEL", "gpt-4o"),
     "DEFAULT_COLOR": os.getenv("DEFAULT_COLOR", "magenta"),
-    "ROLE_STORAGE_PATH": os.getenv("ROLE_STORAGE_PATH", str(ROLE_STORAGE_PATH)),
+    "ROLE_STORAGE_PATH": os.getenv(
+        "ROLE_STORAGE_PATH",
+        os.pathsep.join([str(ROLE_STORAGE_PATH), str(SYSTEM_ROLE_STORAGE_PATH)]),
+    ),
     "DEFAULT_EXECUTE_SHELL_CMD": os.getenv("DEFAULT_EXECUTE_SHELL_CMD", "false"),
     "DISABLE_STREAMING": os.getenv("DISABLE_STREAMING", "false"),
     "CODE_THEME": os.getenv("CODE_THEME", "dracula"),
-    "OPENAI_FUNCTIONS_PATH": os.getenv("OPENAI_FUNCTIONS_PATH", str(FUNCTIONS_PATH)),
+    "OPENAI_FUNCTIONS_PATH": os.getenv(
+        "OPENAI_FUNCTIONS_PATH",
+        os.pathsep.join([str(FUNCTIONS_PATH), str(SYSTEM_FUNCTIONS_PATH)]),
+    ),
     "OPENAI_USE_FUNCTIONS": os.getenv("OPENAI_USE_FUNCTIONS", "true"),
     "SHOW_FUNCTIONS_OUTPUT": os.getenv("SHOW_FUNCTIONS_OUTPUT", "false"),
     "API_BASE_URL": os.getenv("API_BASE_URL", "default"),
@@ -64,6 +83,8 @@ class Config(dict):  # type: ignore
                     self[key] = value
             if has_new_config:
                 self._write()
+        elif system_config_path and system_config_path.exists():
+            super().__init__(**merged_defaults)
         else:
             config_path.parent.mkdir(parents=True, exist_ok=True)
             # Don't write API key to config file if it is in the environment.
@@ -91,7 +112,7 @@ class Config(dict):  # type: ignore
             for line in file:
                 if line.strip() and not line.startswith("#"):
                     key, value = line.strip().split("=", 1)
-                    result[key] = value
+                    result[key] = os.path.expanduser(value)
         return result
 
     def _read(self) -> None:

@@ -241,13 +241,16 @@ def main(
     session: PromptSession[str] = PromptSession()
 
     while shell and interaction:
-        option = typer.prompt(
-            text="[E]xecute, [M]odify, [D]escribe, [A]bort",
-            type=Choice(("e", "m", "d", "a", "y"), case_sensitive=False),
-            default="e" if cfg.get("DEFAULT_EXECUTE_SHELL_CMD") == "true" else "a",
-            show_choices=False,
-            show_default=False,
-        )
+        try:
+            option = typer.prompt(
+                text="[E]xecute, [M]odify, [D]escribe, [A]bort",
+                type=Choice(("e", "m", "d", "a", "y"), case_sensitive=False),
+                default="e" if cfg.get("DEFAULT_EXECUTE_SHELL_CMD") == "true" else "a",
+                show_choices=False,
+                show_default=False,
+            )
+        except typer.Abort:
+            break
         if option in ("e", "y"):
             # "y" option is for keeping compatibility with old version.
             run_command(full_completion)
