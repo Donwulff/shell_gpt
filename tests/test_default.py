@@ -118,12 +118,12 @@ def test_default_chat(completion):
     args["--shell"] = True
     result = runner.invoke(app, cmd_args(**args))
     assert result.exit_code == 2
-    assert "Error" in result.stdout
+    assert "Error" in result.stderr
 
     args["--code"] = True
     result = runner.invoke(app, cmd_args(**args))
     assert result.exit_code == 2
-    assert "Error" in result.stdout
+    assert "Error" in result.stderr
     chat_path.unlink()
 
 
