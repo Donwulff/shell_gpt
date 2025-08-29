@@ -2,7 +2,7 @@ import os
 from getpass import getpass
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Any
+from typing import Any, Iterable
 
 from click import UsageError
 
@@ -76,13 +76,13 @@ class Config(dict):  # type: ignore
 
         if self._exists:
             self._read()
-            has_new_config = False
+            missing_keys: list[str] = []
             for key, value in merged_defaults.items():
                 if key not in self:
-                    has_new_config = True
                     self[key] = value
-            if has_new_config:
-                self._write()
+                    missing_keys.append(key)
+            if missing_keys:
+                self._write(missing_keys)
         elif system_config_path and system_config_path.exists():
             super().__init__(**merged_defaults)
         else:
@@ -98,12 +98,20 @@ class Config(dict):  # type: ignore
     def _exists(self) -> bool:
         return self.config_path.exists()
 
-    def _write(self) -> None:
+    def _write(self, keys: Iterable[str] | None = None) -> None:
+        if self._exists:
+            data = self._read_file(self.config_path)
+        else:
+            data = {}
+            self.config_path.parent.mkdir(parents=True, exist_ok=True)
+
+        keys_to_write = list(self.keys()) if keys is None else list(keys)
+        for key in keys_to_write:
+            data[key] = self[key]
+
         with open(self.config_path, "w", encoding="utf-8") as file:
-            string_config = ""
-            for key, value in self.items():
-                string_config += f"{key}={value}\n"
-            file.write(string_config)
+            for key, value in data.items():
+                file.write(f"{key}={value}\n")
 
     @staticmethod
     def _read_file(path: Path) -> dict[str, str]:
