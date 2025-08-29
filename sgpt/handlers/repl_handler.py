@@ -55,7 +55,7 @@ class ReplHandler(ChatHandler):
                 init_prompt = ""
             if self.role.name == DefaultRoles.SHELL.value and prompt == "e":
                 typer.echo()
-                run_command(full_completion)
+                run_command(full_completion, allow=True)
                 typer.echo()
                 rich_print(Rule(style="bold magenta"))
             elif self.role.name == DefaultRoles.SHELL.value and prompt == "d":
