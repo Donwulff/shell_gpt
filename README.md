@@ -7,7 +7,7 @@ https://github.com/TheR1D/shell_gpt/assets/16740832/9197283c-db6a-4b46-bfea-3eb7
 ```shell
 pip install shell-gpt
 ```
-By default, ShellGPT uses OpenAI's API and GPT-4 model. You'll need an API key, you can generate one [here](https://beta.openai.com/account/api-keys). You will be prompted for your key which will then be stored in `~/.config/shell_gpt/.sgptrc`. A system-wide configuration file located at `/etc/shell_gpt/.sgptrc` is also supported, and any settings in the user file override the system defaults. OpenAI API is not free of charge, please refer to the [OpenAI pricing](https://openai.com/pricing) for more information.
+By default, ShellGPT uses OpenAI's API and GPT-4 model. You'll need an API key, you can generate one [here](https://beta.openai.com/account/api-keys). You will be prompted for your key which will then be stored in `~/.config/shell_gpt/sgptrc` (or `.sgptrc` for backwards compatibility). A system-wide configuration file located at `/etc/shell_gpt/sgptrc` is also supported, and any settings in the user file override the system defaults. OpenAI API is not free of charge, please refer to the [OpenAI pricing](https://openai.com/pricing) for more information.
 
 > [!TIP]
 > Alternatively, you can use locally hosted open source models which are available for free. To use local models, you will need to run your own LLM backend server such as [Ollama](https://github.com/ollama/ollama). To set up ShellGPT with Ollama, please follow this comprehensive [guide](https://github.com/TheR1D/shell_gpt/wiki/Ollama).
@@ -378,7 +378,8 @@ Next time, same exact query will get results from local cache instantly. Note th
 This is just some examples of what we can do using OpenAI GPT models, I'm sure you will find it useful for your specific use cases.
 
 ### Runtime configuration file
-You can set up parameters in a runtime configuration file. System-wide defaults can be placed in `/etc/shell_gpt/.sgptrc`, while per-user overrides live in `~/.config/shell_gpt/.sgptrc`:
+You can set up parameters in a runtime configuration file. System-wide defaults can be placed in `/etc/shell_gpt/sgptrc`, while per-user overrides live in `~/.config/shell_gpt/sgptrc`:
+Paths inside configuration files may use `~` to refer to the current user's home directory.
 ```text
 # API key, also it is possible to define OPENAI_API_KEY env.
 OPENAI_API_KEY=your_api_key
@@ -386,8 +387,8 @@ OPENAI_API_KEY=your_api_key
 API_BASE_URL=default
 # Prettify markdown output.
 PRETTIFY_MARKDOWN=true
-# Path to a directory with role definitions.
-ROLE_STORAGE_PATH=/Users/user/.config/shell_gpt/roles
+# Path(s) to directories with role definitions.
+ROLE_STORAGE_PATH=/Users/user/.config/shell_gpt/roles:/etc/shell_gpt/roles
 # Max amount of cached message per chat session.
 CHAT_CACHE_LENGTH=100
 # Chat cache folder.
@@ -414,8 +415,8 @@ CODE_THEME=default
 OS_NAME=auto
 # Override detected shell in prompts.
 SHELL_NAME=auto
-# Path to a directory with functions.
-OPENAI_FUNCTIONS_PATH=/Users/user/.config/shell_gpt/functions
+# Path(s) to directories with functions.
+OPENAI_FUNCTIONS_PATH=/Users/user/.config/shell_gpt/functions:/etc/shell_gpt/functions
 # Print output of functions when LLM uses them.
 SHOW_FUNCTIONS_OUTPUT=false
 # Allows LLM to use functions.

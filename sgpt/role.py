@@ -4,7 +4,7 @@ from enum import Enum
 from os import getenv, pathsep
 from os.path import basename
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 import typer
 from click import BadArgumentUsage
@@ -45,7 +45,8 @@ ROLE_TEMPLATE = "You are {name}\n{role}"
 
 
 class SystemRole:
-    storage: Path = Path(cfg.get("ROLE_STORAGE_PATH"))
+    role_paths: List[Path] = [Path(p) for p in cfg.get("ROLE_STORAGE_PATH").split(pathsep)]
+    storage: Path = role_paths[0]
 
     def __init__(
         self,
@@ -74,10 +75,11 @@ class SystemRole:
 
     @classmethod
     def get(cls, name: str) -> "SystemRole":
-        file_path = cls.storage / f"{name}.json"
-        if not file_path.exists():
-            raise BadArgumentUsage(f'Role "{name}" not found.')
-        return cls(**json.loads(file_path.read_text()))
+        for base in cls.role_paths:
+            file_path = base / f"{name}.json"
+            if file_path.exists():
+                return cls(**json.loads(file_path.read_text()))
+        raise BadArgumentUsage(f'Role "{name}" not found.')
 
     @classmethod
     @option_callback
@@ -89,11 +91,10 @@ class SystemRole:
     @classmethod
     @option_callback
     def list(cls, _value: str) -> None:
-        if not cls.storage.exists():
-            return
-        # Get all files in the folder.
-        files = cls.storage.glob("*")
-        # Sort files by last modification time in ascending order.
+        files = []
+        for base in cls.role_paths:
+            if base.exists():
+                files.extend(base.glob("*"))
         for path in sorted(files, key=lambda f: f.stat().st_mtime):
             typer.echo(path)
 
