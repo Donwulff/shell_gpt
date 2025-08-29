@@ -17,6 +17,7 @@ from sgpt.handlers.repl_handler import ReplHandler
 from sgpt.llm_functions.init_functions import install_functions as inst_funcs
 from sgpt.role import DefaultRoles, SystemRole
 from sgpt.utils import (
+    ask_for_model,
     get_edited_prompt,
     get_sgpt_version,
     install_shell_integration,
@@ -32,7 +33,7 @@ def main(
     ),
     model: str = typer.Option(
         cfg.get("DEFAULT_MODEL"),
-        help="Large language model to use.",
+        help="Large language model to use. Use 'ask' to choose interactively.",
     ),
     temperature: float = typer.Option(
         0.0,
@@ -200,6 +201,9 @@ def main(
     if editor:
         prompt = get_edited_prompt()
 
+    if model == "ask":
+        model = ask_for_model()
+
     role_class = (
         DefaultRoles.check_get(shell, describe_shell, code)
         if not role
@@ -238,6 +242,7 @@ def main(
             functions=function_schemas,
         )
 
+    model = cfg.get("DEFAULT_MODEL")
     session: PromptSession[str] = PromptSession()
 
     while shell and interaction:

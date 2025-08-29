@@ -2,11 +2,14 @@ import json
 from pathlib import Path
 from typing import Any, Callable, Dict, Generator, List, Optional
 
+from openai import NotFoundError
+
 from ..cache import Cache
 from ..config import cfg
 from ..function import get_function
 from ..printer import MarkdownPrinter, Printer, TextPrinter
 from ..role import DefaultRoles, SystemRole
+from ..utils import ask_for_model
 
 completion: Callable[..., Any] = lambda *args, **kwargs: Generator[Any, None, None]
 
@@ -154,13 +157,25 @@ class Handler:
     ) -> str:
         disable_stream = cfg.get("DISABLE_STREAMING") == "true"
         messages = self.make_messages(prompt.strip())
-        generator = self.get_completion(
-            model=model,
-            temperature=temperature,
-            top_p=top_p,
-            messages=messages,
-            functions=functions,
-            caching=caching,
-            **kwargs,
-        )
+        try:
+            generator = self.get_completion(
+                model=model,
+                temperature=temperature,
+                top_p=top_p,
+                messages=messages,
+                functions=functions,
+                caching=caching,
+                **kwargs,
+            )
+        except NotFoundError:
+            model = ask_for_model()
+            generator = self.get_completion(
+                model=model,
+                temperature=temperature,
+                top_p=top_p,
+                messages=messages,
+                functions=functions,
+                caching=caching,
+                **kwargs,
+            )
         return self.printer(generator, not disable_stream)

@@ -215,6 +215,62 @@ def test_llm_options(completion):
     assert "Berlin" in result.stdout
 
 
+@patch("sgpt.app.ask_for_model")
+@patch("sgpt.handlers.handler.completion")
+def test_model_ask_option(completion, ask_for_model):
+    completion.return_value = mock_comp("hi")
+    original_model = cfg.get("DEFAULT_MODEL")
+
+    def fake() -> str:
+        cfg["DEFAULT_MODEL"] = "gpt-test"
+        return "gpt-test"
+
+    ask_for_model.side_effect = fake
+    args = {"prompt": "hi", "--model": "ask"}
+    result = runner.invoke(app, cmd_args(**args))
+
+    ask_for_model.assert_called_once()
+    completion.assert_called_once()
+    expected = comp_args(role, args["prompt"], model="gpt-test")
+    completion.assert_called_once_with(**expected)
+    assert result.exit_code == 0
+
+    cfg["DEFAULT_MODEL"] = original_model
+
+
+@patch("sgpt.handlers.handler.ask_for_model")
+@patch("sgpt.handlers.handler.completion")
+def test_missing_model_prompts(completion, ask_for_model):
+    from httpx import Request, Response
+    from openai import NotFoundError
+
+    original_model = cfg.get("DEFAULT_MODEL")
+
+    req = Request("GET", "url")
+    resp = Response(status_code=404, request=req)
+    error = NotFoundError("missing", response=resp, body="{}")
+
+    completion.side_effect = [error, mock_comp("ok")]
+
+    def fake() -> str:
+        cfg["DEFAULT_MODEL"] = "gpt-fixed"
+        return "gpt-fixed"
+
+    ask_for_model.side_effect = fake
+    args = {"prompt": "hi", "--model": "bad-model"}
+    result = runner.invoke(app, cmd_args(**args))
+
+    assert completion.call_count == 2
+    ask_for_model.assert_called_once()
+    first_call = comp_args(role, args["prompt"], model="bad-model")
+    second_call = comp_args(role, args["prompt"], model="gpt-fixed")
+    completion.assert_any_call(**first_call)
+    completion.assert_any_call(**second_call)
+    assert result.exit_code == 0
+
+    cfg["DEFAULT_MODEL"] = original_model
+
+
 @patch("sgpt.handlers.handler.completion")
 def test_version(completion):
     args = {"--version": True}

@@ -6,8 +6,10 @@ from typing import Any, Callable
 
 import typer
 from click import BadParameter, UsageError
+from openai import OpenAI
 
 from sgpt.__version__ import __version__
+from sgpt.config import cfg
 from sgpt.integration import bash_integration, zsh_integration
 
 
@@ -56,6 +58,30 @@ def run_command(command: str, allow: bool = False) -> None:
         full_command = f"{shell} -c {shlex.quote(command)}"
 
     os.system(full_command)
+
+
+def ask_for_model() -> str:
+    client_kwargs = {
+        "api_key": cfg.get("OPENAI_API_KEY"),
+        "timeout": int(cfg.get("REQUEST_TIMEOUT")),
+    }
+    base_url = cfg.get("API_BASE_URL")
+    if base_url != "default":
+        client_kwargs["base_url"] = base_url
+    models = OpenAI(**client_kwargs).models.list().data
+    model_ids = sorted(model.id for model in models)
+    if not model_ids:
+        raise UsageError("No models available.")
+    for idx, name in enumerate(model_ids, start=1):
+        typer.echo(f"{idx}. {name}")
+    choice = typer.prompt("Select model", type=int)
+    try:
+        selected = model_ids[choice - 1]
+    except Exception as exc:  # pragma: no cover - sanity check
+        raise UsageError("Invalid model selection.") from exc
+    cfg["DEFAULT_MODEL"] = selected
+    cfg._write()
+    return selected
 
 
 def option_callback(func: Callable) -> Callable:  # type: ignore

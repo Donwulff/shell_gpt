@@ -9,6 +9,8 @@ pip install shell-gpt
 ```
 By default, ShellGPT uses OpenAI's API and GPT-4 model. You'll need an API key, you can generate one [here](https://beta.openai.com/account/api-keys). You will be prompted for your key which will then be stored in `~/.config/shell_gpt/sgptrc` (or `.sgptrc` for backwards compatibility). A system-wide configuration file located at `/etc/shell_gpt/sgptrc` is also supported, and any settings in the user file override the system defaults. OpenAI API is not free of charge, please refer to the [OpenAI pricing](https://openai.com/pricing) for more information.
 
+If the configured model is unavailable, or you run `sgpt` with `--model ask`, ShellGPT queries the OpenAI models endpoint and lets you choose an available model. The chosen model is stored as your new default.
+
 > [!TIP]
 > Alternatively, you can use locally hosted open source models which are available for free. To use local models, you will need to run your own LLM backend server such as [Ollama](https://github.com/ollama/ollama). To set up ShellGPT with Ollama, please follow this comprehensive [guide](https://github.com/TheR1D/shell_gpt/wiki/Ollama).
 >
@@ -399,7 +401,7 @@ CACHE_LENGTH=100
 CACHE_PATH=/tmp/shell_gpt/cache
 # Request timeout in seconds.
 REQUEST_TIMEOUT=60
-# Default OpenAI model to use.
+# Default OpenAI model to use. Set to "ask" to select interactively.
 DEFAULT_MODEL=gpt-4o
 # Default color for shell and code completions.
 DEFAULT_COLOR=magenta
@@ -433,7 +435,8 @@ Possible options for `CODE_THEME`: https://pygments.org/styles/
 │   prompt      [PROMPT]  The prompt to generate completions for.                                          │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Options ────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ --model            TEXT                       Large language model to use. [default: gpt-4o]             │
+│ --model            TEXT                       Large language model to use. Use 'ask' to choose           │
+│                                             interactively. [default: gpt-4o]                            │
 │ --temperature      FLOAT RANGE [0.0<=x<=2.0]  Randomness of generated output. [default: 0.0]             │
 │ --top-p            FLOAT RANGE [0.0<=x<=1.0]  Limits highest probable tokens (words). [default: 1.0]     │
 │ --md             --no-md                      Prettify markdown output. [default: md]                    │
