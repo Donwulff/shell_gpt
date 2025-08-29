@@ -119,5 +119,5 @@ def select_model() -> str:
     if selected not in [m.id for m in models]:
         raise UsageError("Invalid model selected")
     cfg["DEFAULT_MODEL"] = selected
-    cfg._write()
+    cfg._write(["DEFAULT_MODEL"])
     return selected
