@@ -154,7 +154,7 @@ class ChatHandler(Handler):
                 raise BadArgumentUsage(
                     f'Could not determine chat role of "{self.chat_id}"'
                 )
-            if self.role.name == DefaultRoles.DEFAULT.value:
+            if self.role.name == DefaultRoles.default_role_name():
                 # If user didn't pass chat mode, we will use the one that was used to initiate the chat.
                 self.role = SystemRole.get(chat_role_name)
             else:

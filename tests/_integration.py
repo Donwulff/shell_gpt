@@ -22,7 +22,7 @@ from sgpt.__version__ import __version__
 from sgpt.app import main
 from sgpt.config import cfg
 from sgpt.handlers.handler import Handler
-from sgpt.role import SystemRole
+from sgpt.role import DefaultRoles
 
 runner = CliRunner()
 app = typer.Typer()
@@ -399,7 +399,7 @@ class TestShellGpt(TestCase):
 
     def test_color_output(self):
         color = cfg.get("DEFAULT_COLOR")
-        role = SystemRole.get("ShellGPT")
+        role = DefaultRoles.default_role()
         handler = Handler(role=role)
         assert handler.color == color
         os.environ["DEFAULT_COLOR"] = "red"
