@@ -42,6 +42,7 @@ DEFAULT_CONFIG = {
         "ROLE_STORAGE_PATH",
         os.pathsep.join([str(ROLE_STORAGE_PATH), str(SYSTEM_ROLE_STORAGE_PATH)]),
     ),
+    "DEFAULT_SYSTEM_ROLE": os.getenv("DEFAULT_SYSTEM_ROLE", "ShellGPT"),
     "DEFAULT_EXECUTE_SHELL_CMD": os.getenv("DEFAULT_EXECUTE_SHELL_CMD", "false"),
     "DISABLE_STREAMING": os.getenv("DISABLE_STREAMING", "false"),
     "CODE_THEME": os.getenv("CODE_THEME", "dracula"),

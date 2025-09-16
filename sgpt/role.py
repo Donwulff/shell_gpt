@@ -181,9 +181,21 @@ class DefaultRoles(Enum):
             return SystemRole.get(DefaultRoles.DESCRIBE_SHELL.value)
         if code:
             return SystemRole.get(DefaultRoles.CODE.value)
-        return SystemRole.get(DefaultRoles.DEFAULT.value)
+        return cls.default_role()
+
+    @classmethod
+    def default_role_name(cls) -> str:
+        configured = cfg.get("DEFAULT_SYSTEM_ROLE")
+        name = configured.strip()
+        return name or cls.DEFAULT.value
+
+    @classmethod
+    def default_role(cls) -> SystemRole:
+        return SystemRole.get(cls.default_role_name())
 
     def get_role(self) -> SystemRole:
+        if self is DefaultRoles.DEFAULT:
+            return self.default_role()
         return SystemRole.get(self.value)
 
 

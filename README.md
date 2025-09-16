@@ -346,6 +346,8 @@ LLM might execute destructive commands, so please use it at your own risk❗️
 
 ### Roles
 ShellGPT allows you to create custom roles, which can be utilized to generate code, shell commands, or to fulfill your specific needs. To create a new role, use the `--create-role` option followed by the role name. You will be prompted to provide a description for the role, along with other details. This will create a JSON file in `~/.config/shell_gpt/roles` with the role name. Inside this directory, you can also edit default `sgpt` roles, such as **shell**, **code**, and **default**. Use the `--list-roles` option to list all available roles, and the `--show-role` option to display the details of a specific role. Here's an example of a custom role:
+
+To make one of your roles the default when no role flag is supplied, set `DEFAULT_SYSTEM_ROLE` in your configuration file (or the corresponding environment variable) to the desired role name.
 ```shell
 sgpt --create-role json_generator
 # Enter role description: Provide only valid json as response.
@@ -389,6 +391,8 @@ API_BASE_URL=default
 PRETTIFY_MARKDOWN=true
 # Path(s) to directories with role definitions.
 ROLE_STORAGE_PATH=/Users/user/.config/shell_gpt/roles:/etc/shell_gpt/roles
+# Default role used when no role-specific flags are provided.
+DEFAULT_SYSTEM_ROLE=ShellGPT
 # Max amount of cached message per chat session.
 CHAT_CACHE_LENGTH=100
 # Chat cache folder.

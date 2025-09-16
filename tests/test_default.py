@@ -6,17 +6,26 @@ from typer.testing import CliRunner
 
 from sgpt import config, main
 from sgpt.__version__ import __version__
-from sgpt.role import DefaultRoles, SystemRole
+from sgpt.role import DefaultRoles
 
 from .utils import app, cmd_args, comp_args, mock_comp, runner
 
-role = SystemRole.get(DefaultRoles.DEFAULT.value)
 cfg = config.cfg
+
+
+def test_default_role_override(monkeypatch):
+    monkeypatch.setenv("DEFAULT_SYSTEM_ROLE", DefaultRoles.CODE.value)
+
+    role = DefaultRoles.default_role()
+
+    assert DefaultRoles.default_role_name() == DefaultRoles.CODE.value
+    assert role.name == DefaultRoles.CODE.value
 
 
 @patch("sgpt.handlers.handler.completion")
 def test_default(completion):
     completion.return_value = mock_comp("Prague")
+    role = DefaultRoles.default_role()
 
     args = {"prompt": "capital of the Czech Republic?"}
     result = runner.invoke(app, cmd_args(**args))
@@ -29,6 +38,7 @@ def test_default(completion):
 @patch("sgpt.handlers.handler.completion")
 def test_default_stdin(completion):
     completion.return_value = mock_comp("Prague")
+    role = DefaultRoles.default_role()
 
     stdin = "capital of the Czech Republic?"
     result = runner.invoke(app, cmd_args(), input=stdin)
@@ -81,6 +91,7 @@ def test_default_chat(completion):
     chat_name = "_test"
     chat_path = Path(cfg.get("CHAT_CACHE_PATH")) / chat_name
     chat_path.unlink(missing_ok=True)
+    role = DefaultRoles.default_role()
 
     args = {"prompt": "my number is 2", "--chat": chat_name}
     result = runner.invoke(app, cmd_args(**args))
@@ -133,6 +144,7 @@ def test_default_repl(completion):
     chat_name = "_test"
     chat_path = Path(cfg.get("CHAT_CACHE_PATH")) / chat_name
     chat_path.unlink(missing_ok=True)
+    role = DefaultRoles.default_role()
 
     args = {"--repl": chat_name}
     inputs = ["__sgpt__eof__", "my number is 6", "my number + 2?", "exit()"]
@@ -162,6 +174,7 @@ def test_default_repl_stdin(completion):
     chat_name = "_test"
     chat_path = Path(cfg.get("CHAT_CACHE_PATH")) / chat_name
     chat_path.unlink(missing_ok=True)
+    role = DefaultRoles.default_role()
 
     my_runner = CliRunner()
     my_app = typer.Typer()
@@ -193,6 +206,7 @@ def test_default_repl_stdin(completion):
 @patch("sgpt.handlers.handler.completion")
 def test_llm_options(completion):
     completion.return_value = mock_comp("Berlin")
+    role = DefaultRoles.default_role()
 
     args = {
         "prompt": "capital of the Germany?",
