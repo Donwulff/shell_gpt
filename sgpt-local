@@ -1,0 +1,3 @@
+#!/bin/bash
+# Wrapper to run local shell_gpt fork with file library support
+PYTHONPATH=/home/jsantala/github-ti/shell_gpt:$PYTHONPATH exec python3 -m sgpt "$@"
