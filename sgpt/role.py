@@ -53,12 +53,38 @@ class SystemRole:
         name: str,
         role: str,
         variables: Optional[Dict[str, str]] = None,
+        files: Optional[List[str]] = None,
     ) -> None:
         self.storage.mkdir(parents=True, exist_ok=True)
         self.name = name
+        self.files = files or []
         if variables:
             role = role.format(**variables)
+        # Store base role for saving (before file expansion)
+        self._base_role = role
+        # Append file contents to role if files specified
+        if self.files:
+            role = self._append_file_contents(role)
         self.role = role
+
+    def _append_file_contents(self, role: str) -> str:
+        """Read files and append their contents to the role text."""
+        for file_path in self.files:
+            path = Path(file_path).expanduser()
+            if not path.is_absolute():
+                # Try relative to each role path
+                for base in self.role_paths:
+                    candidate = base / path
+                    if candidate.exists():
+                        path = candidate
+                        break
+            if path.exists():
+                try:
+                    content = path.read_text(encoding="utf-8")
+                    role += f"\n\n## {path.name}\n{content}"
+                except Exception as e:
+                    role += f"\n\n## {path.name}\n[Error reading file: {e}]"
+        return role
 
     @classmethod
     def create_defaults(cls) -> None:
@@ -150,8 +176,15 @@ class SystemRole:
                 abort=True,
             )
 
-        self.role = ROLE_TEMPLATE.format(name=self.name, role=self.role)
-        self._file_path.write_text(json.dumps(self.__dict__), encoding="utf-8")
+        # Save unexpanded role with ROLE_TEMPLATE applied
+        save_role = ROLE_TEMPLATE.format(name=self.name, role=self._base_role)
+        save_data = {"name": self.name, "role": save_role}
+        if self.files:
+            save_data["files"] = self.files
+        self._file_path.write_text(json.dumps(save_data), encoding="utf-8")
+        # Update instance role for immediate use
+        self.role = save_role if not self.files else self._append_file_contents(save_role)
+        self._base_role = save_role
 
     def delete(self) -> None:
         if self._exists:
