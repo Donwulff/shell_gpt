@@ -154,6 +154,7 @@ class Handler:
             reasoning_started = False
             reasoning_emitted = False
             content_started = False
+            reasoning_closed = False
             for chunk in response:
                 if not chunk.choices:
                     continue
@@ -205,15 +206,26 @@ class Handler:
                     reasoning_emitted = True
                 content = delta.content or ""
                 if content:
-                    if show_thinking and reasoning_started and reasoning_emitted and not content_started:
-                        yield "\n"
+                    if (
+                        show_thinking
+                        and reasoning_started
+                        and reasoning_emitted
+                        and not reasoning_closed
+                    ):
+                        yield "\n[/thinking]\n"
+                        reasoning_closed = True
                     content_started = True
                     yield content
         except KeyboardInterrupt:
             response.close()
         finally:
-            if show_thinking and reasoning_started and reasoning_emitted:
-                yield "\n"
+            if (
+                show_thinking
+                and reasoning_started
+                and reasoning_emitted
+                and not reasoning_closed
+            ):
+                yield "\n[/thinking]\n"
 
     def handle(
         self,
