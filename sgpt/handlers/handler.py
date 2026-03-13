@@ -151,6 +151,8 @@ class Handler:
         )
 
         try:
+            reasoning_started = False
+            reasoning_emitted = False
             for chunk in response:
                 if not chunk.choices:
                     continue
@@ -177,6 +179,8 @@ class Handler:
                     yield from self.handle_function_call(
                         messages, tool_call_id, name, arguments
                     )
+                    if show_thinking and reasoning_started and reasoning_emitted:
+                        yield "\n"
                     yield from self.get_completion(
                         model=model,
                         temperature=temperature,
@@ -193,10 +197,19 @@ class Handler:
                     delta.get("reasoning") if use_litellm else getattr(delta, "reasoning", None)
                 )
                 if show_thinking and reasoning:
-                    yield f"\n[thinking] {reasoning}\n"
+                    if not reasoning_started:
+                        yield "[thinking] "
+                        reasoning_started = True
+                    yield reasoning
+                    reasoning_emitted = True
+                if reasoning_started and reasoning_emitted and (delta.content or ""):
+                    yield "\n"
                 yield delta.content or ""
         except KeyboardInterrupt:
             response.close()
+        finally:
+            if show_thinking and reasoning_started and reasoning_emitted:
+                yield "\n"
 
     def handle(
         self,
