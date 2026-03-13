@@ -348,6 +348,32 @@ sgpt --role json_generator "random: user, password, email, address"
 
 If the description of the role contains the words "APPLY MARKDOWN" (case sensitive), then chats will be displayed using markdown formatting unless it is explicitly turned off with `--no-md`.
 
+Roles can also include `request_kwargs` to pass extra parameters to the API call. These are merged into the request at runtime and are useful for options like `max_tokens`, `presence_penalty`, or `response_format`. Reserved keys like `model`, `messages`, `temperature`, `top_p`, and `stream` are ignored.
+
+```json
+{
+  "name": "json_generator",
+  "role": "You are json_generator\nProvide only valid JSON as response.",
+  "request_kwargs": {
+    "max_tokens": 300,
+    "presence_penalty": 0.2
+  }
+}
+```
+
+You can also toggle thinking at runtime with `--thinking` or `--no-thinking`, which maps to `chat_template_kwargs.enable_thinking`. CLI flags override any role-level `request_kwargs`.
+
+### Qwen3.5 vLLM role profiles
+This repo includes ready-to-use Qwen3.5 sampling profiles for vLLM under `docs/roles/`. They use `request_kwargs` for OpenAI-compatible fields and `extra_body` for vLLM-specific fields like `top_k`, `min_p`, and `repetition_penalty`, plus `chat_template_kwargs.enable_thinking`.
+
+Files:
+- `docs/roles/qwen3.5-thinking-general.json`
+- `docs/roles/qwen3.5-thinking-coding.json`
+- `docs/roles/qwen3.5-instruct-general.json`
+- `docs/roles/qwen3.5-instruct-reasoning.json`
+
+Make these available by placing them in a directory listed in `ROLE_STORAGE_PATH` (default `~/.config/shell_gpt/roles`), then invoke with `--role`.
+
 ### Request cache
 Control cache using `--cache` (default) and `--no-cache` options. This caching applies for all `sgpt` requests to OpenAI API:
 ```shell

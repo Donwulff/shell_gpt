@@ -56,6 +56,35 @@ def test_role(completion):
     path.unlink(missing_ok=True)
 
 
+@patch("sgpt.handlers.handler.completion")
+def test_role_request_kwargs(completion):
+    completion.return_value = mock_comp('{"foo": "bar"}')
+    path = Path(cfg.get("ROLE_STORAGE_PATH").split(os.pathsep)[0]) / "json_gen_kwargs.json"
+    path.unlink(missing_ok=True)
+    path.write_text(
+        json.dumps(
+            {
+                "name": "json_gen_kwargs",
+                "role": "You are json_gen_kwargs\\nProvide valid JSON.",
+                "request_kwargs": {"max_tokens": 123, "presence_penalty": 0.5},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    args = {
+        "prompt": "generate foo, bar",
+        "--role": "json_gen_kwargs",
+    }
+    result = runner.invoke(app, cmd_args(**args))
+    role = SystemRole.get("json_gen_kwargs")
+    completion.assert_called_once_with(
+        **comp_args(role, args["prompt"], max_tokens=123, presence_penalty=0.5)
+    )
+    assert result.exit_code == 0
+    path.unlink(missing_ok=True)
+
+
 def test_role_lookup_multiple_paths(tmp_path):
     user_path = tmp_path / "user"
     system_path = tmp_path / "system"

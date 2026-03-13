@@ -1,0 +1,17 @@
+{
+  "name": "Qwen3.5 Thinking General (vLLM)",
+  "role": "You are Qwen3.5 Thinking General (vLLM)\nUse thoughtful, structured reasoning and provide high-quality general assistance.",
+  "request_kwargs": {
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "presence_penalty": 1.5,
+    "extra_body": {
+      "top_k": 20,
+      "min_p": 0.0,
+      "repetition_penalty": 1.0,
+      "chat_template_kwargs": {
+        "enable_thinking": true
+      }
+    }
+  }
+}

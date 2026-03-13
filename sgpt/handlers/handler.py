@@ -41,6 +41,16 @@ else:
 
 class Handler:
     cache = Cache(int(cfg.get("CACHE_LENGTH")), Path(cfg.get("CACHE_PATH")))
+    _role_kwargs_blocklist = {
+        "messages",
+        "model",
+        "temperature",
+        "top_p",
+        "stream",
+        "tools",
+        "tool_choice",
+        "parallel_tool_calls",
+    }
 
     def __init__(self, role: SystemRole, markdown: bool) -> None:
         self.role = role
@@ -109,6 +119,7 @@ class Handler:
         top_p: float,
         messages: List[Dict[str, Any]],
         functions: Optional[List[Dict[str, str]]],
+        request_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Generator[str, None, None]:
         tool_call_id = name = arguments = ""
         is_shell_role = self.role.name == DefaultRoles.SHELL.value
@@ -117,10 +128,17 @@ class Handler:
         if is_shell_role or is_code_role or is_dsc_shell_role:
             functions = None
 
+        call_kwargs: Dict[str, Any] = dict(additional_kwargs)
         if functions:
-            additional_kwargs["tool_choice"] = "auto"
-            additional_kwargs["tools"] = functions
-            additional_kwargs["parallel_tool_calls"] = False
+            call_kwargs["tool_choice"] = "auto"
+            call_kwargs["tools"] = functions
+            call_kwargs["parallel_tool_calls"] = False
+
+        if request_kwargs:
+            for key, value in request_kwargs.items():
+                if key in self._role_kwargs_blocklist:
+                    continue
+                call_kwargs[key] = value
 
         response = completion(
             model=model,
@@ -128,7 +146,7 @@ class Handler:
             top_p=top_p,
             messages=messages,
             stream=True,
-            **additional_kwargs,
+            **call_kwargs,
         )
 
         try:
@@ -164,6 +182,7 @@ class Handler:
                         top_p=top_p,
                         messages=messages,
                         functions=functions,
+                        request_kwargs=request_kwargs,
                         caching=False,
                     )
                     return
@@ -184,6 +203,7 @@ class Handler:
     ) -> str:
         disable_stream = cfg.get("DISABLE_STREAMING") == "true"
         messages = self.make_messages(prompt.strip())
+        request_kwargs = dict(self.role.request_kwargs) if self.role.request_kwargs else None
         while True:
             try:
                 generator = self.get_completion(
@@ -192,6 +212,7 @@ class Handler:
                     top_p=top_p,
                     messages=messages,
                     functions=functions,
+                    request_kwargs=request_kwargs,
                     caching=caching,
                     **kwargs,
                 )

@@ -47,6 +47,12 @@ def main(
         max=1.0,
         help="Limits highest probable tokens (words).",
     ),
+    thinking: bool | None = typer.Option(
+        None,
+        "--thinking/--no-thinking",
+        help="Toggle model thinking (maps to chat_template_kwargs.enable_thinking).",
+        rich_help_panel="Model Options",
+    ),
     md: bool = typer.Option(
         cfg.get("PRETTIFY_MARKDOWN") == "true",
         help="Prettify markdown output.",
@@ -213,6 +219,14 @@ def main(
     )
 
     function_schemas = (get_openai_schemas() or None) if functions else None
+    # Apply CLI override if the backend supports chat_template_kwargs.
+    if thinking is not None:
+        role_class.request_kwargs.setdefault("chat_template_kwargs", {})
+        role_class.request_kwargs["chat_template_kwargs"]["enable_thinking"] = thinking
+        extra_body = role_class.request_kwargs.get("extra_body")
+        if isinstance(extra_body, dict):
+            extra_body.setdefault("chat_template_kwargs", {})
+            extra_body["chat_template_kwargs"]["enable_thinking"] = thinking
 
     if repl:
         # Will be in infinite loop here until user exits with Ctrl+C.

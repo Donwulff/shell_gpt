@@ -54,10 +54,12 @@ class SystemRole:
         role: str,
         variables: Optional[Dict[str, str]] = None,
         files: Optional[List[str]] = None,
+        request_kwargs: Optional[Dict[str, object]] = None,
     ) -> None:
         self.storage.mkdir(parents=True, exist_ok=True)
         self.name = name
         self.files = files or []
+        self.request_kwargs = request_kwargs or {}
         if variables:
             role = role.format(**variables)
         # Store base role for saving (before file expansion)
@@ -181,6 +183,8 @@ class SystemRole:
         save_data = {"name": self.name, "role": save_role}
         if self.files:
             save_data["files"] = self.files
+        if self.request_kwargs:
+            save_data["request_kwargs"] = self.request_kwargs
         self._file_path.write_text(json.dumps(save_data), encoding="utf-8")
         # Update instance role for immediate use
         self.role = save_role if not self.files else self._append_file_contents(save_role)

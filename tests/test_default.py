@@ -230,6 +230,48 @@ def test_llm_options(completion):
 
 
 @patch("sgpt.handlers.handler.completion")
+def test_thinking_option(completion):
+    completion.return_value = mock_comp("pong")
+    role = DefaultRoles.default_role()
+
+    args = {
+        "prompt": "ping",
+        "--thinking": True,
+        "--no-functions": True,
+    }
+    result = runner.invoke(app, cmd_args(**args))
+
+    expected_args = comp_args(
+        role=role,
+        prompt=args["prompt"],
+        chat_template_kwargs={"enable_thinking": True},
+    )
+    completion.assert_called_once_with(**expected_args)
+    assert result.exit_code == 0
+
+
+@patch("sgpt.handlers.handler.completion")
+def test_no_thinking_option(completion):
+    completion.return_value = mock_comp("pong")
+    role = DefaultRoles.default_role()
+
+    args = {
+        "prompt": "ping",
+        "--no-thinking": True,
+        "--no-functions": True,
+    }
+    result = runner.invoke(app, cmd_args(**args))
+
+    expected_args = comp_args(
+        role=role,
+        prompt=args["prompt"],
+        chat_template_kwargs={"enable_thinking": False},
+    )
+    completion.assert_called_once_with(**expected_args)
+    assert result.exit_code == 0
+
+
+@patch("sgpt.handlers.handler.completion")
 def test_version(completion):
     args = {"--version": True}
     result = runner.invoke(app, cmd_args(**args))
