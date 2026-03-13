@@ -272,6 +272,39 @@ def test_no_thinking_option(completion):
 
 
 @patch("sgpt.handlers.handler.completion")
+def test_show_thinking_option(completion):
+    def stream():
+        from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
+        from openai.types.chat.chat_completion_chunk import Choice as StreamChoice
+        from openai.types.chat.chat_completion_chunk import ChoiceDelta
+
+        return [
+            ChatCompletionChunk(
+                id="foo",
+                model=cfg.get("DEFAULT_MODEL"),
+                object="chat.completion.chunk",
+                choices=[
+                    StreamChoice(
+                        index=0,
+                        finish_reason=None,
+                        delta=ChoiceDelta(content="hello", role="assistant", reasoning=" think"),
+                    ),
+                ],
+                created=int(datetime.now().timestamp()),
+            )
+        ]
+
+    completion.return_value = stream()
+    args = {
+        "prompt": "ping",
+        "--show-thinking": True,
+        "--no-functions": True,
+    }
+    result = runner.invoke(app, cmd_args(**args))
+    assert result.exit_code == 0
+
+
+@patch("sgpt.handlers.handler.completion")
 def test_version(completion):
     args = {"--version": True}
     result = runner.invoke(app, cmd_args(**args))

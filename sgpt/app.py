@@ -57,6 +57,12 @@ def main(
         cfg.get("PRETTIFY_MARKDOWN") == "true",
         help="Prettify markdown output.",
     ),
+    show_thinking: bool = typer.Option(
+        False,
+        "--show-thinking",
+        help="Show streaming reasoning/thinking traces when the backend provides them.",
+        rich_help_panel="Model Options",
+    ),
     shell: bool = typer.Option(
         False,
         "--shell",
@@ -240,14 +246,15 @@ def main(
         )
 
     if chat:
-        full_completion = ChatHandler(chat, role_class, md).handle(
-            prompt=prompt,
-            model=model,
-            temperature=temperature,
-            top_p=top_p,
-            caching=cache,
-            functions=function_schemas,
-        )
+            full_completion = ChatHandler(chat, role_class, md).handle(
+                prompt=prompt,
+                model=model,
+                temperature=temperature,
+                top_p=top_p,
+                caching=cache,
+                functions=function_schemas,
+                show_thinking=show_thinking,
+            )
     else:
         full_completion = DefaultHandler(role_class, md).handle(
             prompt=prompt,
@@ -256,6 +263,7 @@ def main(
             top_p=top_p,
             caching=cache,
             functions=function_schemas,
+            show_thinking=show_thinking,
         )
 
     session: PromptSession[str] = PromptSession()

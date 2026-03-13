@@ -120,6 +120,7 @@ class Handler:
         messages: List[Dict[str, Any]],
         functions: Optional[List[Dict[str, str]]],
         request_kwargs: Optional[Dict[str, Any]] = None,
+        show_thinking: bool = False,
     ) -> Generator[str, None, None]:
         tool_call_id = name = arguments = ""
         is_shell_role = self.role.name == DefaultRoles.SHELL.value
@@ -183,11 +184,17 @@ class Handler:
                         messages=messages,
                         functions=functions,
                         request_kwargs=request_kwargs,
+                        show_thinking=show_thinking,
                         caching=False,
                     )
                     return
 
-                yield delta.content or ""
+                reasoning = (
+                    delta.get("reasoning") if use_litellm else getattr(delta, "reasoning", None)
+                )
+                if show_thinking and reasoning:
+                    yield f\"\\n[thinking] {reasoning}\\n\"
+                yield delta.content or \"\"
         except KeyboardInterrupt:
             response.close()
 
