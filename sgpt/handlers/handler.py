@@ -193,8 +193,8 @@ class Handler:
                     delta.get("reasoning") if use_litellm else getattr(delta, "reasoning", None)
                 )
                 if show_thinking and reasoning:
-                    yield f\"\\n[thinking] {reasoning}\\n\"
-                yield delta.content or \"\"
+                    yield f"\n[thinking] {reasoning}\n"
+                yield delta.content or ""
         except KeyboardInterrupt:
             response.close()
 
