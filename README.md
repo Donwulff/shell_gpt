@@ -361,7 +361,7 @@ Roles can also include `request_kwargs` to pass extra parameters to the API call
 }
 ```
 
-You can also toggle thinking at runtime with `--thinking` or `--no-thinking`, which maps to `chat_template_kwargs.enable_thinking`. CLI flags override any role-level `request_kwargs`.
+You can also toggle thinking at runtime with `--thinking` or `--no-thinking`, which maps to `extra_body.chat_template_kwargs.enable_thinking` for vLLM-style OpenAI-compatible APIs. CLI flags override any role-level `request_kwargs`.
 
 ### Qwen3.5 vLLM role profiles
 This repo includes ready-to-use Qwen3.5 sampling profiles for vLLM under `docs/roles/`. They use `request_kwargs` for OpenAI-compatible fields and `extra_body` for vLLM-specific fields like `top_k`, `min_p`, and `repetition_penalty`, plus `chat_template_kwargs.enable_thinking`.

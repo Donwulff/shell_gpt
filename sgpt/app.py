@@ -221,9 +221,9 @@ def main(
     function_schemas = (get_openai_schemas() or None) if functions else None
     # Apply CLI override if the backend supports chat_template_kwargs.
     if thinking is not None:
-        role_class.request_kwargs.setdefault("chat_template_kwargs", {})
-        role_class.request_kwargs["chat_template_kwargs"]["enable_thinking"] = thinking
-        extra_body = role_class.request_kwargs.get("extra_body")
+        # vLLM expects chat_template_kwargs under extra_body in OpenAI-compatible APIs.
+        role_class.request_kwargs.setdefault("extra_body", {})
+        extra_body = role_class.request_kwargs["extra_body"]
         if isinstance(extra_body, dict):
             extra_body.setdefault("chat_template_kwargs", {})
             extra_body["chat_template_kwargs"]["enable_thinking"] = thinking

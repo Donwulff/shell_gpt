@@ -244,7 +244,7 @@ def test_thinking_option(completion):
     expected_args = comp_args(
         role=role,
         prompt=args["prompt"],
-        chat_template_kwargs={"enable_thinking": True},
+        extra_body={"chat_template_kwargs": {"enable_thinking": True}},
     )
     completion.assert_called_once_with(**expected_args)
     assert result.exit_code == 0
@@ -265,7 +265,7 @@ def test_no_thinking_option(completion):
     expected_args = comp_args(
         role=role,
         prompt=args["prompt"],
-        chat_template_kwargs={"enable_thinking": False},
+        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
     )
     completion.assert_called_once_with(**expected_args)
     assert result.exit_code == 0
